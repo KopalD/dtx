@@ -281,12 +281,11 @@ h1, h2, p { margin: 0; }
 }
 
 .btn--no {
-  position: absolute;
   background: var(--no-gray);
   color: #5A5468;
-  font-size: 15px;
-  font-weight: 500;
-  padding: 10px 22px;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 16px 40px;
   border-radius: 50px;
   transition: transform .18s var(--ease-spring);
 }
@@ -543,27 +542,27 @@ h1, h2, p { margin: 0; }
 }
 .fade-line.is-visible { opacity: 1; }
 
-.forgive-gif {
-  margin: 22px auto 0;
-  max-width: 190px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 1s ease .3s, transform 1s ease .3s;
-}
-.forgive-gif.is-visible { opacity: 1; transform: translateY(0); }
-.forgive-gif img {
-  width: 100%;
-  border-radius: 16px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.4);
-}
-.forgive-gif figcaption {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--void-gray);
-}
-
-.btn--retry {
+.page3-buttons {
   margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+.retry-note {
+  margin-top: 12px;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--void-gray);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.retry-note.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.btn--retry {
   background: transparent;
   border: 1.5px solid var(--void-gray);
   color: var(--white);
@@ -574,7 +573,73 @@ h1, h2, p { margin: 0; }
   transition: opacity 1s ease, background .3s ease, transform .2s ease;
 }
 .btn--retry.is-visible { opacity: 1; }
+.btn--retry:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  border-color: var(--broken-heart);
+}
 .btn--retry:hover { background: rgba(255,255,255,.1); transform: translateY(-2px); }
+
+.btn--bina {
+  background: rgba(255,77,141,.15);
+  border: 1.5px solid var(--accent-hot);
+  color: #FFB4D2;
+  font-size: 14px;
+  padding: 10px 24px;
+  border-radius: 40px;
+  opacity: 0;
+  transition: opacity 1s ease, background .3s ease, transform .2s ease;
+}
+.btn--bina.is-visible { opacity: 1; }
+.btn--bina:hover { background: rgba(255,77,141,.3); transform: translateY(-2px); }
+
+/* =========================================================
+   SCREEN 4 — Just Us Then! (happy alternate ending)
+   ========================================================= */
+.scene--happy {
+  background: linear-gradient(155deg, #FFE9A8 0%, #FFB4D2 45%, #C9A6FF 100%);
+  position: relative;
+}
+
+.celebrate-particles { position: absolute; inset: 0; pointer-events: none; }
+.celebrate-particles span {
+  position: absolute;
+  top: -8%;
+  font-size: 20px;
+  opacity: .85;
+  animation: celebrate-fall linear infinite;
+}
+@keyframes celebrate-fall {
+  to { transform: translateY(120vh) rotate(30deg); opacity: 0; }
+}
+
+.picnic--happy {
+  animation: happy-pop .6s var(--ease-spring) both;
+}
+@keyframes happy-pop {
+  0% { opacity: 0; transform: scale(.7) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.happy-title {
+  margin-top: 22px;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 7vw, 42px);
+  font-weight: 700;
+  color: #5A2E6B;
+  text-shadow: 0 2px 0 rgba(255,255,255,.4);
+  opacity: 0;
+  animation: bounce-in .7s var(--ease-spring) .3s forwards;
+}
+.happy-sub {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6B3E7A;
+  text-align: center;
+  opacity: 0;
+  animation: bounce-in .7s var(--ease-spring) .5s forwards;
+}
 
 /* =========================================================
    RESPONSIVE
