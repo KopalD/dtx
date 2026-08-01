@@ -45,7 +45,7 @@
 
         <!-- Loader shown briefly after YES -->
         <div class="loader" id="loader">
-          <div class="loader-teddies">🧸 💃 🧸</div>
+          <div class="loader-teddies">🧸</div>
           <p>Yayyy! Date loading&hellip;</p>
         </div>
       </div>
@@ -84,15 +84,33 @@
           <p class="type-line" data-text="No one is available…"></p>
           <p class="type-line" data-text="Plan cancelled."></p>
           <p class="type-line" data-text="Looks like sabke sath date possible nahi hua 😔"></p>
-          <p class="fade-line">Maybe next time&hellip; when the universe (and everyone's family) cooperates 🙄</p>
-
-          <figure class="forgive-gif">
-            <img src="https://media.tenor.com/tzvzrz4famQAAAAC/couple-forgive-me.gif" alt="Cartoon couple pleading and asking for forgiveness" loading="lazy" />
-            <figcaption>Pic of you rn, begging the universe 🥲</figcaption>
-          </figure>
+          <p class="fade-line">Maybe next time&hellip; when the universe (and everyone's family) cooperates, it was my last attempt 🙄</p>
         </div>
 
-        <button class="btn btn--retry" id="btn-retry" type="button">Try again? ✨</button>
+        <div class="page3-buttons">
+          <button class="btn btn--retry" id="btn-retry" type="button">Try again? </button>
+          <button class="btn btn--bina" id="btn-bina" type="button">Bina sab ke sath? 😏</button>
+        </div>
+        <p class="retry-note" id="retry-note">Honestly... there's no point trying again 😒</p>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 4 : Just Us Then! ============ -->
+    <section id="screen-4" class="screen screen--happy" data-screen="4">
+      <div class="scene scene--happy">
+        <div class="celebrate-particles" aria-hidden="true"></div>
+
+        <div class="picnic picnic--happy">
+          <div class="teddy teddy--male">
+            <svg viewBox="0 0 120 120" class="teddy-svg"><use href="#teddy-male"></use></svg>
+          </div>
+          <div class="teddy teddy--female">
+            <svg viewBox="0 0 120 120" class="teddy-svg"><use href="#teddy-female"></use></svg>
+          </div>
+        </div>
+
+        <h2 class="happy-title">Just Us Then!</h2>
+        <p class="happy-sub">Sabki zaroorat kise hai... 😌</p>
       </div>
     </section>
 
@@ -154,11 +172,19 @@
       <!-- blush -->
       <ellipse cx="39" cy="58" rx="7" ry="4.5" fill="#FF9EC4" opacity=".55"></ellipse>
       <ellipse cx="81" cy="58" rx="7" ry="4.5" fill="#FF9EC4" opacity=".55"></ellipse>
-      <!-- shy closed eyes (little upward curves + lashes) -->
-      <path d="M40 47 Q46 42 52 47" fill="none" stroke="#4A2E1C" stroke-width="2.4" stroke-linecap="round"></path>
-      <path d="M68 47 Q74 42 80 47" fill="none" stroke="#4A2E1C" stroke-width="2.4" stroke-linecap="round"></path>
-      <path d="M52 45 L55 42" stroke="#4A2E1C" stroke-width="1.4" stroke-linecap="round"></path>
-      <path d="M68 45 L65 42" stroke="#4A2E1C" stroke-width="1.4" stroke-linecap="round"></path>
+      <!-- big, cute, sparkly eyes -->
+      <ellipse cx="46" cy="48" rx="8" ry="9" fill="#FFF" stroke="#4A2E1C" stroke-width="1"></ellipse>
+      <ellipse cx="74" cy="48" rx="8" ry="9" fill="#FFF" stroke="#4A2E1C" stroke-width="1"></ellipse>
+      <circle cx="47" cy="50" r="5" fill="#3A2415"></circle>
+      <circle cx="75" cy="50" r="5" fill="#3A2415"></circle>
+      <circle cx="49.5" cy="46.5" r="1.8" fill="#FFF"></circle>
+      <circle cx="77.5" cy="46.5" r="1.8" fill="#FFF"></circle>
+      <path d="M39 39 L37 36" stroke="#4A2E1C" stroke-width="1.3" stroke-linecap="round"></path>
+      <path d="M46 37 L46 34" stroke="#4A2E1C" stroke-width="1.3" stroke-linecap="round"></path>
+      <path d="M53 39 L55 36" stroke="#4A2E1C" stroke-width="1.3" stroke-linecap="round"></path>
+      <path d="M67 39 L65 36" stroke="#4A2E1C" stroke-width="1.3" stroke-linecap="round"></path>
+      <path d="M74 37 L74 34" stroke="#4A2E1C" stroke-width="1.3" stroke-linecap="round"></path>
+      <path d="M81 39 L83 36" stroke="#4A2E1C" stroke-width="1.3" stroke-linecap="round"></path>
       <ellipse cx="60" cy="62" rx="3" ry="2.4" fill="#C4527A"></ellipse>
       <path d="M55 70 Q60 74 65 70" fill="none" stroke="#8A5A3C" stroke-width="2" stroke-linecap="round"></path>
       <ellipse cx="60" cy="102" rx="30" ry="16" fill="#F4C9A0" stroke="#E0A574" stroke-width="2"></ellipse>
