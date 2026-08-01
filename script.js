@@ -20,49 +20,40 @@ const CONFIG = {
       name: 'Shweta',
       bio: 'Coffee & JIRA expert',
       avatar: '👩',
-      busyMessage: 'Mazya kade vel nahi 😅… she\u2019s offline forever'
+      busyMessage: 'Mazya kade ved nahi 😅… she needs to feed her husband!'
     },
     {
       id: 'nutan',
       name: 'Nutan',
-      bio: 'Resident Calm cutie',
+      bio: 'Resident Calm & Sweet',
       avatar: '🥰',
-      busyMessage: 'Nutan is busy playing UNO with her cousins … next lifetime shayad'
-    },
-    {
-      id: 'thopte',
-      name: 'Thopte',
-      bio: 'Self-proclaimed wingman',
-      avatar: '🧑‍🦱',
-      busyMessage: 'Thopte is "busy" i.e. sleeping at 4pm 😴… wake him up next month'
+      busyMessage: 'Nutan is busy playing UNO with her cousins… 🃏'
     },
     {
       id: 'sneha',
       name: 'Sneha',
-      bio: 'Chaos in human form 😈',
+      bio: 'Chaos in human form',
       avatar: '😈',
       busyMessage: 'Kaam karo, yeh sab kya kar rahe ho 🙃'
+    },
+    {
+      id: 'thopate',
+      name: 'Thopate',
+      bio: 'Self-proclaimed wingman',
+      avatar: '🧑‍🦱',
+      busyMessage: 'Thopate is "busy" i.e. shopping at Dmart with family for rashan 🛒'
     }
-    // 👉 PLUG IN MORE PEOPLE HERE, e.g.:
-    // {
-    //   id: 'rahul',
-    //   name: 'Rahul',
-    //   bio: 'Third wheel extraordinaire',
-    //   avatar: '🧔',
-    //   busyMessage: 'Rahul is "in a meeting" (he is not) 💼'
-    // },
   ],
 
   dodgePhrases: [
+    'Nice try 😏',
+    'Sabke sath hi jana hai!',
     'Ek baar soch lo 🤔',
     'Aisa please mat karo 🥺',
     'Itni jaldi na mat bolo 😅',
-    'Nice try 😏',
-    'Nahi milega 😂',
-    'Sabke sath hi jana hai!',
-    'Cursor se door raho! 🏃',
+    'Cursor se door raho! ',
     'Thoda toh sharam karo 😳',
-    'Naa mane... NAA! 🙅‍♀️'
+    'Naa mane... NAA! 😑'
   ],
 
   dodgeRadiusPx: 110,
@@ -76,8 +67,185 @@ const CONFIG = {
 };
 
 /* =========================================================================
-   STATE
+   ANALYTICS — session id, per-page timing, NO-button chase stats, invite
+   clicks, and a page-by-page log submitted to Formspree. A fresh session
+   is created every time the page loads/refreshes (nothing is persisted in
+   browser storage), and everything is also mirrored to the console.
    ========================================================================= */
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mgogjyzp';
+
+function makeSessionId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'sess-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+const Analytics = {
+  sessionId: makeSessionId(),
+  sessionStartedAt: new Date(),
+  currentPage: null,
+  page4Reached: false,
+  finalized: false,
+
+  pages: {
+    1: { name: 'opening-yes-no', enteredAt: null, exitedAt: null, durationSeconds: null },
+    2: { name: 'invite-others', enteredAt: null, exitedAt: null, durationSeconds: null },
+    3: { name: 'plan-cancelled', enteredAt: null, exitedAt: null, durationSeconds: null, clickedTryAgain: false, clickedBinaSabKeSath: false },
+    4: { name: 'just-us-then', enteredAt: null, exitedAt: null, durationSeconds: null, reached: false },
+  },
+
+  // internal-only, raw ms timestamps used purely to compute durations — not submitted
+  _rawEnteredAt: {},
+
+  noButton: { chaseCount: 0, clickCount: 0 },
+  yesNoSequence: [],
+  invitesClicked: [],
+  events: [],
+
+  log(type, data = {}) {
+    const entry = { ts: Date.now(), time: new Date().toLocaleTimeString(), type, ...data };
+    this.events.push(entry);
+    console.log(`%c💌 [${this.sessionId.slice(0, 8)}] ${type}`, 'color:#FF4D8D;font-weight:600;', entry);
+    return entry;
+  },
+
+  enterPage(n) {
+    this.currentPage = n;
+    const now = Date.now();
+    this._rawEnteredAt[n] = now;
+    this.pages[n].enteredAt = new Date(now).toLocaleString();
+    this.log('page_enter', { page: n, pageName: this.pages[n].name, enteredAt: this.pages[n].enteredAt });
+  },
+
+  exitPage(n) {
+    const p = this.pages[n];
+    if (!this._rawEnteredAt[n] || p.exitedAt) return;
+    const now = Date.now();
+    p.exitedAt = new Date(now).toLocaleString();
+    p.durationSeconds = +((now - this._rawEnteredAt[n]) / 1000).toFixed(1);
+    this.log('page_exit', { page: n, pageName: p.name, durationSeconds: p.durationSeconds });
+    submitPage(`page-${n}-${p.name}`, this.pagePayload(n));
+  },
+
+  // only the data that belongs to that specific page — no other pages,
+  // no full-session dump.
+  pagePayload(n) {
+    const p = this.pages[n];
+    const base = {
+      sessionId: this.sessionId,
+      page: n,
+      pageName: p.name,
+      enteredAt: p.enteredAt,
+      exitedAt: p.exitedAt,
+      durationSeconds: p.durationSeconds,
+      submittedAt: new Date().toLocaleString(),
+    };
+    if (n === 1) {
+      base.noButtonChaseCount = this.noButton.chaseCount;
+      base.noButtonClickCount = this.noButton.clickCount;
+      base.yesNoSequence = this.yesNoSequence;
+    }
+    if (n === 2) {
+      base.invitesClicked = this.invitesClicked;
+    }
+    if (n === 3) {
+      base.clickedTryAgain = p.clickedTryAgain;
+      base.clickedBinaSabKeSath = p.clickedBinaSabKeSath;
+    }
+    if (n === 4) {
+      base.reached = p.reached;
+    }
+    return base;
+  },
+
+  recordYesNo(type) {
+    const entry = { type, time: new Date().toLocaleTimeString() };
+    this.yesNoSequence.push(entry);
+    this.log(type, entry);
+  },
+
+  recordChase() {
+    this.noButton.chaseCount++;
+    this.recordYesNo('no_chase');
+  },
+
+  recordNoClick() {
+    this.noButton.clickCount++;
+    this.recordYesNo('no_click');
+  },
+
+  recordInviteClick(person) {
+    const entry = {
+      id: person.id,
+      name: person.name,
+      order: this.invitesClicked.length + 1,
+      time: new Date().toLocaleTimeString(),
+    };
+    this.invitesClicked.push(entry);
+    this.log('invite_click', entry);
+  },
+
+  recordRetryClick() {
+    this.pages[3].clickedTryAgain = true;
+    this.log('retry_click', {});
+  },
+
+  recordBinaClick() {
+    this.pages[3].clickedBinaSabKeSath = true;
+    this.log('bina_sab_ke_sath_click', {});
+  },
+
+  markPage4Reached() {
+    this.page4Reached = true;
+    this.pages[4].reached = true;
+    this.log('page4_reached', {});
+  },
+
+};
+
+function submitPage(label, payload) {
+  const body = JSON.stringify({ _subject: `Date Plan — ${label}`, label, ...payload });
+  console.log(`%c📤 submitting → ${label}`, 'color:#6FA8FF;font-weight:600;', JSON.parse(body));
+  fetch(FORMSPREE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body,
+    keepalive: true,
+  }).catch(err => console.warn('[date-plan] analytics submit failed', err));
+}
+
+function submitPageBeacon(label, payload) {
+  const body = JSON.stringify({ _subject: `Date Plan — ${label}`, label, ...payload });
+  console.log(`%c📤 beacon → ${label}`, 'color:#6FA8FF;font-weight:600;', JSON.parse(body));
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(FORMSPREE_ENDPOINT, new Blob([body], { type: 'application/json' }));
+  } else {
+    submitPage(label, payload);
+  }
+}
+
+function finalizeSession(reason) {
+  if (Analytics.finalized) return;
+  Analytics.finalized = true;
+
+  const n = Analytics.currentPage;
+  if (!n) return;
+
+  const p = Analytics.pages[n];
+  if (Analytics._rawEnteredAt[n] && !p.exitedAt) {
+    const now = Date.now();
+    p.exitedAt = new Date(now).toLocaleString();
+    p.durationSeconds = +((now - Analytics._rawEnteredAt[n]) / 1000).toFixed(1);
+  }
+
+  const payload = { ...Analytics.pagePayload(n), reason, page4Reached: Analytics.page4Reached };
+  console.log('%c🏁 session end', 'color:#8A83A0;font-weight:700;', payload);
+  submitPageBeacon(`session-end-page-${n}`, payload);
+}
+
+window.addEventListener('pagehide', () => finalizeSession('pagehide'));
+window.addEventListener('beforeunload', () => finalizeSession('beforeunload'));
+
+
 const state = {
   screen: 1,
   busyCount: 0,
@@ -156,13 +324,48 @@ function setupNoButtonDodge() {
   const btnNo = $('#btn-no');
   const row = $('.button-row');
 
-  // initial resting position (roughly centered next to YES)
   let x = 0, y = 0;
   let lastMoveAt = 0;
   let lastMessageAt = 0;
-  btnNo.style.position = 'absolute';
-  btnNo.style.left = '58%';
-  btnNo.style.top = '0';
+  let phraseIndex = 0;
+
+  // NO is a normal flex item the whole time — same box, same size, same
+  // line as YES. Dodging is done purely with `transform`, which moves it
+  // visually without ever touching layout/position, so there's no risk of
+  // capturing a mid-animation size/position and freezing it.
+
+  const btnYes = $('#btn-yes');
+  const overlapBuffer = 14;
+
+  function performDodge(clientX, clientY) {
+    const rect = btnNo.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const now = performance.now();
+    const rowRect = row.getBoundingClientRect();
+    const yesRect = btnYes.getBoundingClientRect();
+
+    const naturalLeft = rect.left - x;
+    const minX = Math.ceil((yesRect.right + overlapBuffer) - naturalLeft);
+    const maxX = rowRect.width * 0.55;
+
+    // if the cursor/tap is dead-center on the button, pick a random
+    // escape direction instead of atan2(0,0) which would be undefined
+    const angle = (clientX === cx && clientY === cy)
+      ? rand(0, Math.PI * 2)
+      : Math.atan2(cy - clientY, cx - clientX);
+    const jump = rand(90, 160);
+    x = Math.max(minX, Math.min(maxX, x + Math.cos(angle) * jump));
+    y = Math.max(-20, Math.min(20, y + Math.sin(angle) * jump * 0.3));
+
+    btnNo.style.transform = `translate(${x}px, ${y}px) rotate(${rand(-12, 12)}deg)`;
+    lastMoveAt = now;
+
+    if (now - lastMessageAt > CONFIG.dodgeMessageCooldownMs) {
+      lastMessageAt = now;
+      showDodgeText(rect.left + rect.width / 2, rect.top);
+    }
+  }
 
   function dodge(clientX, clientY) {
     const rect = btnNo.getBoundingClientRect();
@@ -173,24 +376,13 @@ function setupNoButtonDodge() {
 
     if (dist >= CONFIG.dodgeRadiusPx) return;
     if (now - lastMoveAt <= CONFIG.dodgeMoveCooldownMs) return;
-    lastMoveAt = now;
-
-    const rowRect = row.getBoundingClientRect();
-    const angle = Math.atan2(cy - clientY, cx - clientX);
-    const jump = rand(90, 160);
-    x = Math.max(-rowRect.width * 0.35, Math.min(rowRect.width * 0.55, x + Math.cos(angle) * jump));
-    y = Math.max(-20, Math.min(20, y + Math.sin(angle) * jump * 0.3));
-
-    btnNo.style.transform = `translate(${x}px, ${y}px) rotate(${rand(-12, 12)}deg)`;
-
-    if (now - lastMessageAt > CONFIG.dodgeMessageCooldownMs) {
-      lastMessageAt = now;
-      showDodgeText(rect.left + rect.width / 2, rect.top);
-    }
+    Analytics.recordChase();
+    performDodge(clientX, clientY);
   }
 
   function showDodgeText(px, py) {
-    const phrase = CONFIG.dodgePhrases[Math.floor(rand(0, CONFIG.dodgePhrases.length))];
+    const phrase = CONFIG.dodgePhrases[phraseIndex % CONFIG.dodgePhrases.length];
+    phraseIndex++;
     const el = document.createElement('div');
     el.className = 'dodge-text';
     el.textContent = phrase;
@@ -210,8 +402,18 @@ function setupNoButtonDodge() {
     if (t) dodge(t.clientX, t.clientY);
   }, { passive: true });
 
-  // in the vanishingly unlikely event it's ever "clicked", it doesn't act
-  btnNo.addEventListener('click', e => e.preventDefault());
+  // if it's ever actually clicked/tapped, don't act on it — just make it flee
+  btnNo.addEventListener('click', e => {
+    e.preventDefault();
+    Analytics.recordNoClick();
+    performDodge(e.clientX, e.clientY);
+  });
+  btnNo.addEventListener('touchstart', e => {
+    e.preventDefault();
+    Analytics.recordNoClick();
+    const t = e.touches[0];
+    if (t) performDodge(t.clientX, t.clientY);
+  }, { passive: false });
 }
 
 function spawnConfetti() {
@@ -235,11 +437,14 @@ function spawnConfetti() {
 
 function setupYesButton() {
   $('#btn-yes').addEventListener('click', () => {
+    Analytics.recordYesNo('yes_click');
     spawnConfetti();
     $('#loader').classList.add('is-visible');
     setTimeout(() => {
       $('#loader').classList.remove('is-visible');
+      Analytics.exitPage(1);
       goToScreen(2);
+      Analytics.enterPage(2);
       darkenParticles();
     }, 1500);
   });
@@ -263,13 +468,14 @@ function renderPeopleGrid() {
       <div class="person-badge">Available</div>
       <div class="person-message">${person.busyMessage}</div>
     `;
-    card.addEventListener('click', () => markBusy(card));
+    card.addEventListener('click', () => markBusy(card, person));
     grid.appendChild(card);
   });
 }
 
-function markBusy(card) {
+function markBusy(card, person) {
   if (card.classList.contains('is-busy')) return;
+  Analytics.recordInviteClick(person);
 
   card.classList.add('is-shaking');
   setTimeout(() => card.classList.remove('is-shaking'), 500);
@@ -283,7 +489,9 @@ function markBusy(card) {
 
     if (state.busyCount >= CONFIG.invitees.length) {
       setTimeout(() => {
+        Analytics.exitPage(2);
         goToScreen(3);
+        Analytics.enterPage(3);
         runEndingSequence();
       }, 1500);
     }
@@ -338,12 +546,50 @@ async function runEndingSequence() {
     await new Promise(r => setTimeout(r, 350));
   }
   $('.fade-line').classList.add('is-visible');
-  setTimeout(() => $('.forgive-gif').classList.add('is-visible'), 400);
-  setTimeout(() => $('#btn-retry').classList.add('is-visible'), 1000);
+  setTimeout(() => {
+    $('#btn-retry').classList.add('is-visible');
+    $('#btn-bina').classList.add('is-visible');
+  }, 700);
 }
 
 function setupRetryButton() {
-  $('#btn-retry').addEventListener('click', () => window.location.reload());
+  const btn = $('#btn-retry');
+  btn.addEventListener('click', () => {
+    Analytics.recordRetryClick();
+    $('#retry-note').classList.add('is-visible');
+    setTimeout(() => {
+      btn.disabled = true;
+    }, 1600);
+  });
+}
+
+function setupBinaButton() {
+  $('#btn-bina').addEventListener('click', () => {
+    Analytics.recordBinaClick();
+    Analytics.exitPage(3);
+    goToScreen(4);
+    Analytics.enterPage(4);
+    Analytics.markPage4Reached();
+    spawnCelebrateParticles();
+  });
+}
+
+/* =========================================================================
+   SCREEN 4 — Just Us Then! (happy alternate ending)
+   ========================================================================= */
+function spawnCelebrateParticles() {
+  if (CONFIG.reducedMotion) return;
+  const layer = $('.celebrate-particles');
+  if (!layer || layer.childElementCount) return; // only seed once
+  const icons = ['🎉', '💕', '✨', '🥳', '💖'];
+  for (let i = 0; i < 20; i++) {
+    const s = document.createElement('span');
+    s.textContent = icons[Math.floor(rand(0, icons.length))];
+    s.style.left = `${rand(0, 100)}%`;
+    s.style.animationDuration = `${rand(5, 10)}s`;
+    s.style.animationDelay = `${rand(0, 6)}s`;
+    layer.appendChild(s);
+  }
 }
 
 /* =========================================================================
@@ -372,6 +618,18 @@ function setupCursorTrail() {
    INIT
    ========================================================================= */
 function init() {
+  const openedAt = Analytics.sessionStartedAt.toLocaleString();
+  Analytics.log('session_start', {
+    sessionId: Analytics.sessionId,
+    openedAt,
+  });
+  submitPage('page-1-opened', {
+    sessionId: Analytics.sessionId,
+    event: 'site_opened',
+    openedAt,
+  });
+  Analytics.enterPage(1);
+
   spawnParticles();
   spawnFloatyHearts();
   spawnBrokenHearts();
@@ -382,6 +640,7 @@ function init() {
   setupNoButtonDodge();
   setupYesButton();
   setupRetryButton();
+  setupBinaButton();
 }
 
 document.addEventListener('DOMContentLoaded', init);
